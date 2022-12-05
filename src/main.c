@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <stdbool.h>
+#include <time.h>
 #include "pulse.h"
 #include "common.h"
 #include "cavacore.h"
 
 int main() {
-  while(1) {
+  while(true) {
     struct audio_data audio;
     memset(&audio, 0, sizeof(audio));
 
@@ -45,7 +47,34 @@ int main() {
     cava_out = (double *)malloc(number_of_bars / output_channels * audio.channels * sizeof(double));
     memset(cava_out, 0, number_of_bars/output_channels * audio.channels * sizeof(double));
 
-    while (1) {
+    int sleep_counter = 0;
+    bool silence = true;
+    struct timespec sleep_mode_timer = { .tv_sec = 1, .tv_nsec = 0 };
+    struct timespec loop_timer = { .tv_sec = 0, .tv_nsec = 1000000 };
+    while (true) {
+
+      // check if audio input is present
+      silence = true;
+
+      for (int n = 0; n < (audio.input_buffer_size * 2); n++) {
+        if (audio.cava_in[n] && n != 2048) {
+          silence = false;
+          break;
+        }
+      }
+
+      // printf("%u", sleep_counter);
+
+      // increment sleep counter when silent, reset if not
+      if (silence && sleep_counter <= 1000)
+        sleep_counter++;
+      else if (!silence)
+        sleep_counter = 0;
+      else { // runs when sleep_counter > 1000
+        nanosleep(&sleep_mode_timer, NULL);
+        continue;
+      }
+
       pthread_mutex_lock(&audio.lock);
       cava_execute(audio.cava_in, audio.samples_counter, cava_out, plan);
       if (audio.samples_counter > 0) {
@@ -53,14 +82,14 @@ int main() {
       }
       pthread_mutex_unlock(&audio.lock);
 
-      struct timespec timeout_timer = { .tv_sec = 0, .tv_nsec = 1000000 };
-      nanosleep(&timeout_timer, NULL);
 
       for (int n = 0; n < number_of_bars / 2; n++) {
         printf("%-4d", (int)( cava_out[n] * 100 ));
       }
       printf("\x1b[0E");
       fflush(stdout);
+
+      nanosleep(&loop_timer, NULL);
     }
 
     
