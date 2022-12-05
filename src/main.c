@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
+#include <signal.h>
 #include "pulse.h"
 #include "common.h"
 #include "cavacore.h"
@@ -8,7 +9,20 @@
 #define LOOP_NS 10000000
 #define SILENCE_TIME 1000000000
 
+void sig_handler(int sig_no) {
+  printf("\x1b[?25h");
+  exit(EXIT_FAILURE);
+}
+
 int main() {
+  struct sigaction action;
+  memset(&action, 0, sizeof(action));
+  action.sa_handler = &sig_handler;
+  sigaction(SIGINT, &action, NULL);
+  sigaction(SIGTERM, &action, NULL);
+  sigaction(SIGUSR1, &action, NULL);
+  sigaction(SIGUSR2, &action, NULL);
+  printf("\x1b[?25l");
   while(true) {
     struct audio_data audio;
     memset(&audio, 0, sizeof(audio));
@@ -89,7 +103,7 @@ int main() {
       for (int n = 0; n < number_of_bars / 2; n++) {
         printf("%-4d", (int)( cava_out[n] * 100 ));
       }
-      printf("\x1b[0E");
+      printf("\x1b[0G");
       fflush(stdout);
 
       nanosleep(&loop_timer, NULL);
