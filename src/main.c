@@ -5,6 +5,9 @@
 #include "common.h"
 #include "cavacore.h"
 
+#define LOOP_NS 10000000
+#define SILENCE_TIME 1000000000
+
 int main() {
   while(true) {
     struct audio_data audio;
@@ -50,7 +53,7 @@ int main() {
     int sleep_counter = 0;
     bool silence = true;
     struct timespec sleep_mode_timer = { .tv_sec = 1, .tv_nsec = 0 };
-    struct timespec loop_timer = { .tv_sec = 0, .tv_nsec = 1000000 };
+    struct timespec loop_timer = { .tv_sec = 0, .tv_nsec = LOOP_NS };
     while (true) {
 
       // check if audio input is present
@@ -66,7 +69,7 @@ int main() {
       // printf("%u", sleep_counter);
 
       // increment sleep counter when silent, reset if not
-      if (silence && sleep_counter <= 1000)
+      if (silence && sleep_counter <= SILENCE_TIME / LOOP_NS)
         sleep_counter++;
       else if (!silence)
         sleep_counter = 0;
