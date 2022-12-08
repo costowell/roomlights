@@ -13,7 +13,7 @@
 #define PORTNAME "/dev/ttyACM0"
 
 static const LightModeCallback lightmodes[] = {
-  NULL,
+  lc_clear,
   lc_volume,
   lc_wave
 };
@@ -75,11 +75,9 @@ int main() {
       lmc.terminate = false;
     }
 
-    if (signal > 0) {
-      if(pthread_create(&p_thread, NULL, lightmodes[signal], &lmc)) {
-        fprintf(stderr, "failed to start new thread!"); 
-        exit(EXIT_FAILURE);
-      }
+    if(pthread_create(&p_thread, NULL, lightmodes[signal], &lmc)) {
+      fprintf(stderr, "failed to start new thread!"); 
+      exit(EXIT_FAILURE);
     }
   }
 }

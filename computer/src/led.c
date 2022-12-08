@@ -57,6 +57,12 @@ bool write_leds(int fd) {
 }
 
 /* Light Controlling Functions */
+void lc_clear(struct LightModeCommon *lmc) {
+  memset(&rgb_buf, 0, 3 * LED_SEGMENTS);
+  write_leds(lmc->serial);
+  while(!lmc->terminate) {};
+}
+
 void lc_wave(struct LightModeCommon *lmc) {
   int wave_position = 0;
   while(!lmc->terminate) {

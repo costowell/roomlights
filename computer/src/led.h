@@ -22,6 +22,7 @@ struct RGB {
 typedef void (*LightModeCallback)(struct LightModeCommon*);
 void lc_volume(struct LightModeCommon *lmc);
 void lc_wave(struct LightModeCommon *lmc);
+void lc_clear(struct LightModeCommon *lmc);
 
 
 int set_interface_attribs (int fd, int speed, int parity);
