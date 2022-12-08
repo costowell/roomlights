@@ -66,7 +66,7 @@ upload:
 	@if [ ! -c $(SERIAL_DEV) ] ; \
 	then echo "---> ERROR: Serial Device not available, please set the SERIAL_DEV environment variable" ; \
 	else echo -e "---> Uploading sketch\n"; \
-	arduino-cli upload -b $(FQBN) -p $(SERIAL_DEV) $(VFLAG); \
+	$(CLI) upload -b $(FQBN) -p $(SERIAL_DEV) $(VFLAG); \
 	fi
 
 monitor:
