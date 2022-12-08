@@ -54,6 +54,8 @@ int main() {
   pthread_t p_thread;
   struct LightModeCommon lmc;
 
+  memset(&p_thread, 0, sizeof(pthread_t));
+
   lmc.terminate = false;
   lmc.serial = open_serial(PORTNAME);
 
