@@ -27,6 +27,7 @@ ifndef SERIAL_DEV
 endif
 
 BUILD_DIR  := $(subst :,.,build/$(FQBN))
+CLI        := "./bin/arduino-cli"
 
 SRC        := $(wildcard *.ino)
 HDRS       := $(wildcard *.h)
@@ -53,7 +54,7 @@ compile: $(ELF)
 .PHONY: compile
 
 $(ELF): $(SRC) $(HDRS)
-	arduino-cli compile -b $(FQBN) $(VFLAG)
+	$(CLI) compile -b $(FQBN) $(VFLAG)
 	@if which arduino-manifest.pl; \
 	then echo "---> Generating manifest.txt"; \
 	arduino-manifest.pl -b $(FQBN) $(SRC) $(HDRS) > manifest.txt; \
