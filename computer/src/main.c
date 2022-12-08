@@ -57,7 +57,7 @@ int main() {
   lmc.serial = open_serial(PORTNAME);
 
   setup_signals();
-  usleep(3000000);
+  usleep(8000000);
 
   pthread_create(&p_thread, NULL, &lc_volume, &lmc);
 

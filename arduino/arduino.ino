@@ -2,12 +2,11 @@
 #include "constants.h"
 
 #define RGB_PIN         6
-#define BRIGHTNESS      200
+#define BRIGHTNESS      255
 #define CHIP_SET        WS2812B
 #define COLOR_CODE      GRB
 
 CRGB leds[LED_NUM];
-int time = 0;
 
 void setup() {
   Serial.begin(115200);

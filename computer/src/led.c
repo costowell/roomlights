@@ -150,7 +150,7 @@ void lc_volume(struct LightModeCommon *lmc) {
     }
     pthread_mutex_unlock(&audio.lock);
 
-    int hue_interval = (360/LED_SEGMENTS)*2;
+    int hue_interval = (360/LED_SEGMENTS) * 2;
     for (int n = 0; n < LED_SEGMENTS / 2; n++) {
       struct RGB rgb = hsv_to_rgb(hue_interval * n, 100, pow(cava_out[n], 2) * 100);
       int pos = n * 3;
@@ -166,11 +166,11 @@ void lc_volume(struct LightModeCommon *lmc) {
       rgb_buf[pos+2] = rgb.b;
     }
 
-    for (int i = 0; i < 3 * LED_SEGMENTS; i+=3) {
-      printf("\x1b[48;2;%u;%u;%um ", rgb_buf[i], rgb_buf[i+1], rgb_buf[i+2]);
-    }
-    printf("\x1b[0G");
-    fflush(stdout);
+    // for (int i = 0; i < 3 * LED_SEGMENTS; i+=3) {
+    //   printf("\x1b[48;2;%u;%u;%um ", rgb_buf[i], rgb_buf[i+1], rgb_buf[i+2]);
+    // }
+    // printf("\x1b[0G");
+    // fflush(stdout);
     if (!write_leds(lmc->serial)) break;
     end = clock();
     // printf("%f ms\n", (double)(end - start) / CLOCKS_PER_SEC * 1000);
