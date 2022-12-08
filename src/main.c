@@ -1,124 +1,82 @@
-#include <stdio.h>
-#include <stdbool.h>
 #include <time.h>
+#include <pthread.h>
+#include <unistd.h>
 #include <signal.h>
-#include "pulse.h"
-#include "common.h"
-#include "cavacore.h"
+#include <stdbool.h>
+#include <sys/signalfd.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include "led.h"
 
-#define LOOP_NS 10000000
-#define SILENCE_TIME 1000000000
+#define LEN(arr) (sizeof(arr) / sizeof(arr[0]))
+#define PORTNAME "/dev/ttyACM0"
 
-void sig_handler(int sig_no) {
-  printf("\x1b[?25h");
+static const LightModeCallback lightmodes[] = {
+  lc_volume,
+  lc_wave
+};
+static int signal_fd;
+
+void term_handler() {
   exit(EXIT_FAILURE);
 }
 
+void setup_signals() {
+	// Ignore all realtime signals
+	sigset_t ignored_signals;
+	sigemptyset(&ignored_signals);
+	for (int i = SIGRTMIN; i <= SIGRTMAX; i++)
+		sigaddset(&ignored_signals, i);
+	sigprocmask(SIG_BLOCK, &ignored_signals, NULL);
+
+	// Handle termination signals
+	signal(SIGINT, term_handler);
+	signal(SIGTERM, term_handler);
+
+	// Avoid zombie subprocesses
+	struct sigaction sa;
+	sa.sa_handler = SIG_DFL;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_NOCLDWAIT;
+	sigaction(SIGCHLD, &sa, 0);
+
+	// Handle block update signals
+	sigset_t handled_signals;
+	sigemptyset(&handled_signals);
+	for (int i = 0; i < LEN(lightmodes); i++)
+		sigaddset(&handled_signals, SIGRTMIN + i);
+	signal_fd = signalfd(-1, &handled_signals, 0);
+}
+
 int main() {
-  struct sigaction action;
-  memset(&action, 0, sizeof(action));
-  action.sa_handler = &sig_handler;
-  sigaction(SIGINT, &action, NULL);
-  sigaction(SIGTERM, &action, NULL);
-  sigaction(SIGUSR1, &action, NULL);
-  sigaction(SIGUSR2, &action, NULL);
-  printf("\x1b[?25l");
-  while(true) {
-    struct audio_data audio;
-    memset(&audio, 0, sizeof(audio));
+  pthread_t p_thread;
+  struct LightModeCommon lmc;
 
-    // audio.source = "default";
+  lmc.terminate = false;
+  lmc.serial = open_serial(PORTNAME);
 
-    audio.format = 16;
-    audio.rate = 44100;
-    audio.samples_counter = 0;
-    audio.channels = 2;
-    audio.IEEE_FLOAT = 0;
+  setup_signals();
+  usleep(3000000);
 
-    audio.input_buffer_size = BUFFER_SIZE * audio.channels;
-    audio.cava_buffer_size = audio.input_buffer_size * 8;
-    audio.cava_in = (double *)malloc(audio.cava_buffer_size * sizeof(double));
-    memset(audio.cava_in, 0, sizeof(int) * audio.cava_buffer_size);
+  pthread_create(&p_thread, NULL, &lc_volume, &lmc);
 
-    audio.terminate = 0;
+  while (true) {
+    struct signalfd_siginfo info;
+    read(signal_fd, &info, sizeof(info));
+    int signal = info.ssi_signo - SIGRTMIN;
+    if (signal < 0 || signal >= LEN(lightmodes))
+      break;
+    
+    if (p_thread) {
+      lmc.terminate = true;
+      pthread_join(p_thread, NULL);
+      lmc.terminate = false;
+    }
 
-    pthread_t p_thread;
-
-    int thr_id;
-
-    pthread_mutex_init(&audio.lock, NULL);
-
-    // Pulse
-    getPulseDefaultSink((void *)&audio);
-    thr_id = pthread_create(&p_thread, NULL, input_pulse, (void *)&audio);
-
-    int number_of_bars = 60;
-    int output_channels = 2;
-    double *cava_out;
-    struct cava_plan *plan = cava_init(number_of_bars / output_channels, audio.rate, audio.channels, 1, 0.77, 50, 10000);
-
-    if (plan->status == -1) {
-      fprintf(stderr, "Error inititalizing cava . %s", plan->error_message);
+    if(pthread_create(&p_thread, NULL, lightmodes[signal], &lmc)) {
+      fprintf(stderr, "failed to start new thread!"); 
       exit(EXIT_FAILURE);
     }
-    cava_out = (double *)malloc(number_of_bars / output_channels * audio.channels * sizeof(double));
-    memset(cava_out, 0, number_of_bars/output_channels * audio.channels * sizeof(double));
-
-    int sleep_counter = 0;
-    bool silence = true;
-    struct timespec sleep_mode_timer = { .tv_sec = 1, .tv_nsec = 0 };
-    struct timespec loop_timer = { .tv_sec = 0, .tv_nsec = LOOP_NS };
-    while (true) {
-
-      // check if audio input is present
-      silence = true;
-
-      for (int n = 0; n < (audio.input_buffer_size * 2); n++) {
-        if (audio.cava_in[n] && n != 2048) {
-          silence = false;
-          break;
-        }
-      }
-
-      // printf("%u", sleep_counter);
-
-      // increment sleep counter when silent, reset if not
-      if (silence && sleep_counter <= SILENCE_TIME / LOOP_NS)
-        sleep_counter++;
-      else if (!silence)
-        sleep_counter = 0;
-      else { // runs when sleep_counter > 1000
-        nanosleep(&sleep_mode_timer, NULL);
-        continue;
-      }
-
-      pthread_mutex_lock(&audio.lock);
-      cava_execute(audio.cava_in, audio.samples_counter, cava_out, plan);
-      if (audio.samples_counter > 0) {
-          audio.samples_counter = 0;
-      }
-      pthread_mutex_unlock(&audio.lock);
-
-
-      for (int n = 0; n < number_of_bars / 2; n++) {
-        printf("%-4d", (int)( cava_out[n] * 100 ));
-      }
-      printf("\x1b[0G");
-      fflush(stdout);
-
-      nanosleep(&loop_timer, NULL);
-    }
-
-    
-    pthread_mutex_lock(&audio.lock);
-    audio.terminate = 1;
-    pthread_mutex_unlock(&audio.lock);
-    pthread_join(p_thread, NULL);
-    cava_destroy(plan);
-
-    free(plan);
-    free(cava_out);
-    free(audio.source);
-    free(audio.cava_in);
   }
 }
