@@ -5,10 +5,8 @@
 #include <stdint.h>
 #include <signal.h>
 #include <stdbool.h>
+#include "constants.h"
 
-#define LED_NUM 300
-#define LED_PER_SEG 5
-#define LED_SEGMENTS (LED_NUM / LED_PER_SEG)
 
 struct LightModeCommon {
   bool terminate;

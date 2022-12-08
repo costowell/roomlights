@@ -1,9 +1,7 @@
 #include <FastLED.h>
+#include "constants.h"
 
 #define RGB_PIN         6
-#define LED_NUM         300
-#define LED_PER_SEG     5
-#define SEGMENTS        LED_NUM / LED_PER_SEG
 #define BRIGHTNESS      200
 #define CHIP_SET        WS2812B
 #define COLOR_CODE      GRB
@@ -24,7 +22,7 @@ void setup() {
 
 void loop() {
   if (Serial.available() > 0) {
-    for (int s = 0; s < SEGMENTS; s++) {
+    for (int s = 0; s < LED_SEGMENTS; s++) {
       byte buf[3];
       Serial.readBytes( (byte*)(&buf), 3);
       for (int i = 0; i < LED_PER_SEG; i++) {
