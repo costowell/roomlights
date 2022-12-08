@@ -12,7 +12,7 @@ HEADERS := $(wildcard $(SRC)/*.h)
 
 LIBS    := libpulse-simple fftw3
 CFLAGS  := $(shell pkg-config --cflags $(LIBS))
-LDFLAGS := $(shell pkg-config --libs $(LIBS)) -lm
+LDFLAGS := $(shell pkg-config --libs $(LIBS)) -lm -lpthread
 
 debug: CFLAGS += -O0
 debug: $(BIN)
