@@ -20,7 +20,9 @@ struct RGB {
 };
 
 typedef void (*LightModeCallback)(struct LightModeCommon*);
-void lc_volume(struct LightModeCommon *lmc);
+void lc_volume(struct LightModeCommon *lmc, int power);
+void lc_volume2(struct LightModeCommon *lmc);
+void lc_volume3(struct LightModeCommon *lmc);
 void lc_wave(struct LightModeCommon *lmc);
 void lc_clear(struct LightModeCommon *lmc);
 

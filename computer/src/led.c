@@ -81,7 +81,7 @@ void lc_wave(struct LightModeCommon *lmc) {
   }
 }
 
-void lc_volume(struct LightModeCommon *lmc) {
+void lc_volume(struct LightModeCommon *lmc, int power) {
   struct audio_data audio;
   memset(&audio, 0, sizeof(audio));
 
@@ -158,14 +158,14 @@ void lc_volume(struct LightModeCommon *lmc) {
 
     int hue_interval = (360/LED_SEGMENTS) * 2;
     for (int n = 0; n < LED_SEGMENTS / 2; n++) {
-      struct RGB rgb = hsv_to_rgb(hue_interval * n, 100, pow(cava_out[n], 2) * 100);
+      struct RGB rgb = hsv_to_rgb(hue_interval * n, 100, pow(cava_out[n], power) * 100);
       int pos = n * 3;
       rgb_buf[pos]   = rgb.r;
       rgb_buf[pos+1] = rgb.g;
       rgb_buf[pos+2] = rgb.b;
     }
     for (int n = LED_SEGMENTS / 2; n < LED_SEGMENTS; n++) {
-      struct RGB rgb = hsv_to_rgb(hue_interval * (LED_SEGMENTS - n), 100, pow(cava_out[LED_SEGMENTS - n - 1], 2) * 100);
+      struct RGB rgb = hsv_to_rgb(hue_interval * (LED_SEGMENTS - n), 100, pow(cava_out[LED_SEGMENTS - n - 1], power) * 100);
       int pos = n * 3;
       rgb_buf[pos]   = rgb.r;
       rgb_buf[pos+1] = rgb.g;
@@ -195,6 +195,13 @@ void lc_volume(struct LightModeCommon *lmc) {
   free(audio.cava_in);
 }
 
+void lc_volume2(struct LightModeCommon *lmc) {
+  lc_volume(lmc, 2);
+}
+
+void lc_volume3(struct LightModeCommon *lmc) {
+  lc_volume(lmc, 3);
+}
 
 /* Serial connecton related */
 int set_interface_attribs (int fd, int speed, int parity) {

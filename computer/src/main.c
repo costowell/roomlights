@@ -14,7 +14,8 @@
 
 static const LightModeCallback lightmodes[] = {
   lc_clear,
-  lc_volume,
+  lc_volume2,
+  lc_volume3,
   lc_wave
 };
 static int signal_fd;
