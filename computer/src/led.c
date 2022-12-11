@@ -165,7 +165,7 @@ void lc_volume(struct LightModeCommon *lmc) {
       rgb_buf[pos+2] = rgb.b;
     }
     for (int n = LED_SEGMENTS / 2; n < LED_SEGMENTS; n++) {
-      struct RGB rgb = hsv_to_rgb(hue_interval * ((LED_SEGMENTS / 2) - n), 100, pow(cava_out[LED_SEGMENTS - n - 1], 2) * 100);
+      struct RGB rgb = hsv_to_rgb(hue_interval * (LED_SEGMENTS - n), 100, pow(cava_out[LED_SEGMENTS - n - 1], 2) * 100);
       int pos = n * 3;
       rgb_buf[pos]   = rgb.r;
       rgb_buf[pos+1] = rgb.g;
