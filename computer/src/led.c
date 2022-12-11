@@ -81,7 +81,7 @@ void lc_wave(struct LightModeCommon *lmc) {
   }
 }
 
-void lc_volume(struct LightModeCommon *lmc, int power) {
+void _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction) {
   struct audio_data audio;
   memset(&audio, 0, sizeof(audio));
 
@@ -112,7 +112,7 @@ void lc_volume(struct LightModeCommon *lmc, int power) {
 
   int output_channels = 2;
   double *cava_out;
-  struct cava_plan *plan = cava_init(LED_SEGMENTS / output_channels, audio.rate, audio.channels, 1, 0.77, 50, 10000);
+  struct cava_plan *plan = cava_init(LED_SEGMENTS / output_channels, audio.rate, audio.channels, 1, noise_reduction, 50, 10000);
 
   if (plan->status == -1) {
     fprintf(stderr, "Error inititalizing cava . %s", plan->error_message);
@@ -195,12 +195,12 @@ void lc_volume(struct LightModeCommon *lmc, int power) {
   free(audio.cava_in);
 }
 
-void lc_volume2(struct LightModeCommon *lmc) {
-  lc_volume(lmc, 2);
+void lc_volume(struct LightModeCommon *lmc) {
+  _lc_volume(lmc, 2, 0.77);
 }
 
-void lc_volume3(struct LightModeCommon *lmc) {
-  lc_volume(lmc, 3);
+void lc_volume_bright(struct LightModeCommon *lmc) {
+  _lc_volume(lmc, 3, 0.50);
 }
 
 /* Serial connecton related */
