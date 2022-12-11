@@ -60,7 +60,9 @@ bool write_leds(int fd) {
 void lc_clear(struct LightModeCommon *lmc) {
   memset(&rgb_buf, 0, 3 * LED_SEGMENTS);
   write_leds(lmc->serial);
-  while(!lmc->terminate) {};
+  while(!lmc->terminate) {
+    usleep(100000);
+  };
 }
 
 void lc_slow_clear(struct LightModeCommon *lmc) {
