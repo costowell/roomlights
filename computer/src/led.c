@@ -71,7 +71,7 @@ void lc_slow_clear(struct LightModeCommon *lmc) {
     }
     write_leds(lmc->serial);
   }
-  while(!lmc->terminate) {};
+  lc_clear(lmc);
 }
 
 void lc_wave(struct LightModeCommon *lmc) {
