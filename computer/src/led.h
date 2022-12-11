@@ -24,6 +24,7 @@ void lc_volume(struct LightModeCommon *lmc);
 void lc_volume_bright(struct LightModeCommon *lmc);
 void lc_wave(struct LightModeCommon *lmc);
 void lc_clear(struct LightModeCommon *lmc);
+void lc_slow_clear(struct LightModeCommon *lmc);
 
 void _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction);
 int set_interface_attribs (int fd, int speed, int parity);

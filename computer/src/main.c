@@ -13,7 +13,7 @@
 #define PORTNAME "/dev/ttyACM0"
 
 static const LightModeCallback lightmodes[] = {
-  lc_clear,
+  lc_slow_clear,
   lc_volume,
   lc_volume_bright,
   lc_wave
