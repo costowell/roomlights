@@ -64,7 +64,7 @@ void lc_clear(struct LightModeCommon *lmc) {
 }
 
 void lc_slow_clear(struct LightModeCommon *lmc) {
-  for (int n = 0; n < LED_SEGMENTS / 2; n++) {
+  for (int n = 0; n < (LED_SEGMENTS / 2) * 3; n++) {
     rgb_buf[n] = 0;
     rgb_buf[LED_SEGMENTS - n] = 0;
     write_leds(lmc->serial);
