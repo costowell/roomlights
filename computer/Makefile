@@ -32,7 +32,7 @@ $(OBJ):
 clean_debug: clean
 	+@$(MAKE) --no-print-directory debug
 
-clean_release:
+clean_release: clean
 	+@$(MAKE) --no-print-directory release
 
 clean:
