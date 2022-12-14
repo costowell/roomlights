@@ -60,9 +60,7 @@ bool write_leds(int fd) {
 void lc_clear(struct LightModeCommon *lmc) {
   memset(&rgb_buf, 0, 3 * LED_SEGMENTS);
   write_leds(lmc->serial);
-  while(!lmc->terminate) {
-    usleep(100000);
-  };
+  while(!lmc->terminate) usleep(100000);
 }
 
 void lc_slow_clear(struct LightModeCommon *lmc) {
@@ -136,7 +134,6 @@ void _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction) 
 
   int sleep_counter = 0;
   bool silence = true;
-  struct timespec sleep_mode_timer = { .tv_sec = 1, .tv_nsec = 0 };
   while (!lmc->terminate) {
     clock_t start, end;
 
@@ -158,7 +155,7 @@ void _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction) 
     else if (!silence)
       sleep_counter = 0;
     else { // runs when sleep_counter > 1000
-      nanosleep(&sleep_mode_timer, NULL);
+      usleep(1000000);
       continue;
     }
 
