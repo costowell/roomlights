@@ -21,11 +21,13 @@ void setup() {
 
 void loop() {
   if (Serial.available() > 0) {
-    for (int s = 0; s < LED_SEGMENTS; s++) {
+    for (int s = 0; s < LED_SEG_PER_REP; s++) {
       byte buf[3];
       Serial.readBytes( (byte*)(&buf), 3);
-      for (int i = 0; i < LED_PER_SEG; i++) {
-        leds[(s * LED_PER_SEG)+i].setRGB(buf[0], buf[1], buf[2]);
+      for (int r = 0; r < LED_REPS; r++) {
+        for (int i = 0; i < LED_PER_SEG; i++) {
+          leds[((s * LED_PER_SEG)+i)+(LED_SEG_PER_REP * r)].setRGB(buf[0], buf[1], buf[2]);
+        }
       }
     }
     FastLED.show();

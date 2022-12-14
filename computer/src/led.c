@@ -10,7 +10,7 @@
 #include <string.h>
 #include <fcntl.h>
 
-uint8_t rgb_buf[LED_SEGMENTS * 3];
+uint8_t rgb_buf[LED_SEG_PER_REP * 3];
 
 /* Utility Functions */
 struct RGB hsv_to_rgb(float H, float S, float V) {
@@ -58,16 +58,16 @@ bool write_leds(int fd) {
 
 /* Light Controlling Functions */
 void lc_clear(struct LightModeCommon *lmc) {
-  memset(&rgb_buf, 0, 3 * LED_SEGMENTS);
+  memset(&rgb_buf, 0, 3 * LED_SEG_PER_REP);
   write_leds(lmc->serial);
   while(!lmc->terminate) usleep(100000);
 }
 
 void lc_slow_clear(struct LightModeCommon *lmc) {
-  for (int n = 0; n < (LED_SEGMENTS / 2); n++) {
+  for (int n = 0; n < (LED_SEG_PER_REP / 2); n++) {
     for (int i = 0; i < 3; i++) {
       rgb_buf[(n * 3) + i] = 0;
-      rgb_buf[(LED_SEGMENTS * 3) - ((n * 3) + i) - 1] = 0;
+      rgb_buf[(LED_SEG_PER_REP * 3) - ((n * 3) + i) - 1] = 0;
     }
     write_leds(lmc->serial);
   }
@@ -87,7 +87,7 @@ void lc_wave(struct LightModeCommon *lmc) {
     rgb_buf[led_position + 1] = 0;
     rgb_buf[led_position + 2] = 255;
     wave_position++;
-    if (wave_position == LED_SEGMENTS) wave_position = 0;
+    if (wave_position == LED_SEG_PER_REP) wave_position = 0;
     write_leds(lmc->serial);
   }
 }
@@ -123,14 +123,14 @@ void _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction) 
 
   int output_channels = 2;
   double *cava_out;
-  struct cava_plan *plan = cava_init(LED_SEGMENTS / output_channels, audio.rate, audio.channels, 1, noise_reduction, 50, 10000);
+  struct cava_plan *plan = cava_init(LED_SEG_PER_REP / output_channels, audio.rate, audio.channels, 1, noise_reduction, 50, 10000);
 
   if (plan->status == -1) {
     fprintf(stderr, "Error inititalizing cava . %s", plan->error_message);
     exit(EXIT_FAILURE);
   }
-  cava_out = (double *)malloc(LED_SEGMENTS / output_channels * audio.channels * sizeof(double));
-  memset(cava_out, 0, LED_SEGMENTS/output_channels * audio.channels * sizeof(double));
+  cava_out = (double *)malloc(LED_SEG_PER_REP / output_channels * audio.channels * sizeof(double));
+  memset(cava_out, 0, LED_SEG_PER_REP/output_channels * audio.channels * sizeof(double));
 
   int sleep_counter = 0;
   bool silence = true;
@@ -166,16 +166,16 @@ void _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction) 
     }
     pthread_mutex_unlock(&audio.lock);
 
-    int hue_interval = (360/LED_SEGMENTS) * 2;
-    for (int n = 0; n < LED_SEGMENTS / 2; n++) {
+    int hue_interval = (360/LED_SEG_PER_REP) * 2;
+    for (int n = 0; n < LED_SEG_PER_REP / 2; n++) {
       struct RGB rgb = hsv_to_rgb(hue_interval * n, 100, pow(cava_out[n], power) * 100);
       int pos = n * 3;
       rgb_buf[pos]   = rgb.r;
       rgb_buf[pos+1] = rgb.g;
       rgb_buf[pos+2] = rgb.b;
     }
-    for (int n = LED_SEGMENTS / 2; n < LED_SEGMENTS; n++) {
-      struct RGB rgb = hsv_to_rgb(hue_interval * (LED_SEGMENTS - n), 100, pow(cava_out[LED_SEGMENTS - n - 1], power) * 100);
+    for (int n = LED_SEG_PER_REP / 2; n < LED_SEG_PER_REP; n++) {
+      struct RGB rgb = hsv_to_rgb(hue_interval * (LED_SEG_PER_REP - n), 100, pow(cava_out[LED_SEG_PER_REP - n - 1], power) * 100);
       int pos = n * 3;
       rgb_buf[pos]   = rgb.r;
       rgb_buf[pos+1] = rgb.g;
