@@ -46,7 +46,15 @@ struct RGB hsv_to_rgb(float H, float S, float V) {
   return rgb;
 }
 
+bool is_valid_fd(int fd) {
+  return fcntl(fd, F_GETFD) != -1 || errno != EBADF;
+}
+
 bool write_leds(int fd) {
+  if (!is_valid_fd(fd)) {
+    errno = ENODEV;
+    return false;
+  }
   int status = write(fd, rgb_buf, sizeof(rgb_buf));
 
   if (status == -1) return false;
@@ -57,42 +65,51 @@ bool write_leds(int fd) {
 }
 
 /* Light Controlling Functions */
-void lc_clear(struct LightModeCommon *lmc) {
+int lc_clear(struct LightModeCommon *lmc) {
   memset(&rgb_buf, 0, 3 * LED_SEG_PER_REP);
-  write_leds(lmc->serial);
+  if (!write_leds(lmc->serial)) return errno;
   while(!lmc->terminate) usleep(100000);
+  return 0;
 }
 
-void lc_slow_clear(struct LightModeCommon *lmc) {
+int lc_slow_clear(struct LightModeCommon *lmc) {
   for (int n = 0; n < (LED_SEG_PER_REP / 2); n++) {
     for (int i = 0; i < 3; i++) {
       rgb_buf[(n * 3) + i] = 0;
       rgb_buf[(LED_SEG_PER_REP * 3) - ((n * 3) + i) - 1] = 0;
     }
-    write_leds(lmc->serial);
+    if(!write_leds(lmc->serial)) return errno;
   }
-  lc_clear(lmc);
+  return lc_clear(lmc);
 }
 
-void lc_wave(struct LightModeCommon *lmc) {
+int lc_wave(struct LightModeCommon *lmc) {
   int wave_position = 0;
+  const int end_pos = LED_NUM;
   while(!lmc->terminate) {
     int led_position = wave_position * 3;
     if (wave_position != 0) {
       rgb_buf[led_position - 3] = 0;
       rgb_buf[led_position - 2] = 0;
       rgb_buf[led_position - 1] = 0;
+    } else {
+      rgb_buf[end_pos-1] = 0;
+      rgb_buf[end_pos-2] = 0;
+      rgb_buf[end_pos-3] = 0;
     }
     rgb_buf[led_position] = 0;
     rgb_buf[led_position + 1] = 0;
     rgb_buf[led_position + 2] = 255;
     wave_position++;
-    if (wave_position == LED_SEG_PER_REP) wave_position = 0;
-    write_leds(lmc->serial);
+    if (wave_position == LED_SEG_PER_REP) {
+      wave_position = 0;
+    }
+    if(!write_leds(lmc->serial)) return errno;
   }
+  return 0;
 }
 
-void _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction) {
+int _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction) {
   struct audio_data audio;
   memset(&audio, 0, sizeof(audio));
 
@@ -187,7 +204,7 @@ void _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction) 
     // }
     // printf("\x1b[0G");
     // fflush(stdout);
-    if (!write_leds(lmc->serial)) break;
+    if (!write_leds(lmc->serial)) return errno;
     end = clock();
     // printf("%f ms\n", (double)(end - start) / CLOCKS_PER_SEC * 1000);
   }
@@ -203,14 +220,16 @@ void _lc_volume(struct LightModeCommon *lmc, int power, double noise_reduction) 
   free(cava_out);
   free(audio.source);
   free(audio.cava_in);
+
+  return 0;
 }
 
-void lc_volume(struct LightModeCommon *lmc) {
-  _lc_volume(lmc, 2, 0.77);
+int lc_volume(struct LightModeCommon *lmc) {
+  return _lc_volume(lmc, 2, 0.77);
 }
 
-void lc_volume_bright(struct LightModeCommon *lmc) {
-  _lc_volume(lmc, 3, 0.50);
+int lc_volume_bright(struct LightModeCommon *lmc) {
+  return _lc_volume(lmc, 3, 0.50);
 }
 
 /* Serial connecton related */
