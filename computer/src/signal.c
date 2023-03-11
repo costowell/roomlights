@@ -12,14 +12,16 @@ void term_handler() {
   exit(EXIT_FAILURE);
 }
 
-void await_signals(struct LightModeCommon *lmc) {
+void await_signals(struct await_signals_args *args) {
+  setup_signals(args->num_signals);
+  struct LightModeCommon *lmc = args->lmc;
   while(true) {
     if (lmc->status != 0) break;
     struct signalfd_siginfo info;
     read(signal_fd, &info, sizeof(info));
     int signal = info.ssi_signo - SIGRTMIN;
 
-    while (lmc->locked) {}
+    while (lmc->locked) { }
     lmc->locked = true;
     lmc->signal = signal;
     lmc->locked = false;
