@@ -105,5 +105,6 @@ int main() {
       lmc.signal = -1;
       lmc.locked = false;
     }
+    usleep(100000);
   }
 }
