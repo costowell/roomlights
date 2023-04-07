@@ -10,5 +10,5 @@ struct await_signals_args {
 };
 
 void term_handler();
-void setup_signals();
+void setup_signals(int lm_count);
 void await_signals(struct await_signals_args *args);
