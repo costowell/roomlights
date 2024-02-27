@@ -5,4 +5,3 @@ make
 cd ../computer
 make clean_debug
 cd ..
-./computer/roomlights
